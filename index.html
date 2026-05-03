@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vortex Timer</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0b0f1a;
+        color: #fff;
+        text-align: center;
+    }
+
+    h1 {
+        margin-top: 20px;
+        font-size: 2.5rem;
+        color: #00c3ff;
+    }
+
+    .timer-box {
+        margin: 20px auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        background: #12182b;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,195,255,0.2);
+    }
+
+    .label {
+        font-size: 1rem;
+        color: #aaa;
+    }
+
+    .time {
+        font-size: 2rem;
+        margin-top: 10px;
+        color: #00ffcc;
+    }
+
+    .footer {
+        margin-top: 30px;
+        font-size: 0.9rem;
+        color: #777;
+    }
+
+    a {
+        color: #00c3ff;
+        text-decoration: none;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>VORTEX TIMER</h1>
+
+<div class="timer-box">
+    <div class="label">Forex Market Status</div>
+    <div class="time" id="forexTimer">Loading...</div>
+</div>
+
+<div class="timer-box">
+    <div class="label">NASDAQ / S&P 500 (New York)</div>
+    <div class="time" id="nySession">Loading...</div>
+</div>
+
+<div class="timer-box">
+    <div class="label">London Session</div>
+    <div class="time" id="londonSession">Loading...</div>
+</div>
+
+<div class="footer">
+    Telegram: <a href="https://t.me/unchainedtradingg" target="_blank">@AhmadVortex</a>
+</div>
+
+<script>
+function formatTime(ms) {
+    let totalSeconds = Math.floor(ms / 1000);
+    let hours = Math.floor(totalSeconds / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
+    let seconds = totalSeconds % 60;
+
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+function getNextForexOpen(now) {
+    let day = now.getUTCDay();
+    let hour = now.getUTCHours();
+
+    let nextOpen = new Date(now);
+
+    // Forex opens Sunday 21:00 UTC
+    if (day === 6 || (day === 5 && hour >= 21)) {
+        // Saturday or after Friday close → next Sunday
+        let daysToSunday = (7 - day);
+        nextOpen.setUTCDate(now.getUTCDate() + daysToSunday);
+        nextOpen.setUTCHours(21,0,0,0);
+    } 
+    else if (day === 0 && hour < 21) {
+        nextOpen.setUTCHours(21,0,0,0);
+    } 
+    else {
+        return null; // market open
+    }
+
+    return nextOpen;
+}
+
+function getNextSessionOpen(openHourUTC) {
+    let now = new Date();
+    let next = new Date(now);
+
+    next.setUTCHours(openHourUTC, 0, 0, 0);
+
+    if (now.getUTCHours() >= openHourUTC) {
+        next.setUTCDate(next.getUTCDate() + 1);
+    }
+
+    return next;
+}
+
+function updateTimers() {
+    let now = new Date();
+
+    // FOREX
+    let forexOpen = getNextForexOpen(now);
+    if (forexOpen) {
+        let diff = forexOpen - now;
+        document.getElementById("forexTimer").innerText =
+            "Opens in: " + formatTime(diff);
+    } else {
+        document.getElementById("forexTimer").innerText =
+            "MARKET OPEN";
+    }
+
+    // NEW YORK (NASDAQ / S&P 500) ~ 13:30 UTC
+    let nyOpen = getNextSessionOpen(13);
+    let nyDiff = nyOpen - now;
+    document.getElementById("nySession").innerText =
+        "Opens in: " + formatTime(nyDiff);
+
+    // LONDON ~ 8:00 UTC
+    let londonOpen = getNextSessionOpen(8);
+    let londonDiff = londonOpen - now;
+    document.getElementById("londonSession").innerText =
+        "Opens in: " + formatTime(londonDiff);
+}
+
+// 🔥 THIS FIXES YOUR "TIME NOT MOVING" ISSUE
+setInterval(updateTimers, 1000);
+updateTimers();
+</script>
+
+</body>
+</html>
